@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Dashboard</h2>
+
+<div class="mb-3">
+    <a href="{{ url_for('log_workout') }}" class="btn btn-primary">Log Workout</a>
+    <a href="{{ url_for('export') }}" class="btn btn-secondary">Export CSV</a>
+    <a href="{{ url_for('logout') }}" class="btn btn-danger float-end">Logout</a>
+</div>
+
+<canvas id="progressChart" width="400" height="150" class="mt-4"></canvas>
+
+<table class="table mt-4">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Exercise</th>
+      <th>Reps</th>
+      <th>Weight</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for w in workouts %}
+    <tr>
+      <td>{{ w.date }}</td>
+      <td>{{ w.exercise }}</td>
+      <td>{{ w.reps }}</td>
+      <td>{{ w.weight }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Load Chart.js once -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- This script block holds JSON-encoded chart data -->
+<script id="chart-data" type="application/json">
+{
+    "labels": {{ chart_data | map(attribute='date') | list | tojson }},
+    "data": {{ chart_data | map(attribute='weight') | list | tojson }}
+}
+</script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Actual Chart Initialization -->
+<script>
+const rawData = JSON.parse(document.getElementById('chart-data').textContent);
+
+const ctx = document.getElementById('progressChart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: rawData.labels,
+        datasets: [{
+            label: 'Weight Lifted',
+            data: rawData.data,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.3,
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: true
+            }
+        },
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Date'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Weight (kg)'
+                }
+            }
+        }
+    }
+});
+</script>
+
+
+{% endblock %}
